@@ -12,7 +12,8 @@
 
 @interface CDVVideo : CDVPlugin {
   MovieViewController *player;
-  NSString *movie;
+  NSArray *movies;
+  int movies_idx;
 }
 
 - (void) play:(CDVInvokedUrlCommand*)command;

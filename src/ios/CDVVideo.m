@@ -16,7 +16,11 @@
 @implementation CDVVideo
 - (void) play:(CDVInvokedUrlCommand*)command
 {
-  movie = [command.arguments objectAtIndex:0];
+  movies_idx = 0;
+  movies = [[command.arguments objectAtIndex:0] componentsSeparatedByString:@" "];
+  if ([movies count] == 0)
+    return;
+  NSString *movie = [movies objectAtIndex:0];
   NSString *orient = [command.arguments objectAtIndex:1];
   NSRange range = [movie rangeOfString:@"http"];
   if(range.length > 0) {
@@ -42,17 +46,26 @@
     }
   }
   if (player) {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(MovieDidFinish:) name:MPMoviePlayerPlaybackDidFinishNotification object:nil];
+    // Remove the movie player view controller from the "playback did finish" notification observers
+    [[NSNotificationCenter defaultCenter] removeObserver:player name:MPMoviePlayerPlaybackDidFinishNotification object:player.moviePlayer];  
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(MovieDidFinish:) name:MPMoviePlayerPlaybackDidFinishNotification object:player.moviePlayer];
     [self.viewController presentMoviePlayerViewControllerAnimated:player];
   }
 }
 
 - (void)MovieDidFinish:(NSNotification *)notification {
-  [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                  name:MPMoviePlayerPlaybackDidFinishNotification
-                                                object:nil];
-  [self writeJavascript:[NSString stringWithFormat:@"window.plugins.CDVVideo.finished(\"%@\");", movie]];
-  
+  MPMoviePlayerController* moviePlayer = [notification object];
+  movies_idx++;
+  if (movies_idx < [movies count]) {
+    moviePlayer.contentURL = [movies objectAtIndex:movies_idx];
+  }
+  else {
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:MPMoviePlayerPlaybackDidFinishNotification
+                                                  object:moviePlayer];
+    [self.viewController dismissMoviePlayerViewControllerAnimated];
+    [self writeJavascript:[NSString stringWithFormat:@"window.plugins.CDVVideo.finished(\"%@\");", @""]];
+  }
 }
 
 - (void)dealloc {
