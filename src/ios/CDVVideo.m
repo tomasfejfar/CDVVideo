@@ -49,14 +49,17 @@
     // Remove the movie player view controller from the "playback did finish" notification observers
     [[NSNotificationCenter defaultCenter] removeObserver:player name:MPMoviePlayerPlaybackDidFinishNotification object:player.moviePlayer];  
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(MovieDidFinish:) name:MPMoviePlayerPlaybackDidFinishNotification object:player.moviePlayer];
+    player.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
     [self.viewController presentMoviePlayerViewControllerAnimated:player];
   }
 }
 
 - (void)MovieDidFinish:(NSNotification *)notification {
+  // Obtain the reason why the movie playback finished
+  NSNumber *finishReason = [[notification userInfo] objectForKey:MPMoviePlayerPlaybackDidFinishReasonUserInfoKey];
   MPMoviePlayerController* moviePlayer = [notification object];
   movies_idx++;
-  if (movies_idx < [movies count]) {
+  if (movies_idx < [movies count] && [finishReason intValue] == MPMovieFinishReasonPlaybackEnded) {
     moviePlayer.movieSourceType = MPMovieSourceTypeUnknown;
     moviePlayer.contentURL = [NSURL URLWithString:[movies objectAtIndex:movies_idx]];
     [moviePlayer play];
