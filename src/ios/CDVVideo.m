@@ -57,7 +57,9 @@
   MPMoviePlayerController* moviePlayer = [notification object];
   movies_idx++;
   if (movies_idx < [movies count]) {
-    moviePlayer.contentURL = [movies objectAtIndex:movies_idx];
+    moviePlayer.movieSourceType = MPMovieSourceTypeUnknown;
+    moviePlayer.contentURL = [NSURL URLWithString:[movies objectAtIndex:movies_idx]];
+    [moviePlayer play];
   }
   else {
     [[NSNotificationCenter defaultCenter] removeObserver:self
